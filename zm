@@ -1,0 +1,65 @@
+#!/bin/bash
+website="https://zerm.eu/"
+shortener="https://zerm.link/"
+[ -z "$EDITOR" ] && EDITOR="vim"
+
+mkdir -p "zerm"
+
+newpost() {
+        filecount=$(ls "authors" | wc -l)
+        [ $filecount -eq 0 ] && { echo "There are no authors." ; exit 1 ; }
+        read -erp "Give a title for your article:
+        " title
+        echo "$title" | grep "\"" >/dev/null && echo "Use unicode quotes in titles." && exit
+        url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g")"
+        [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit
+        number=1
+        [ $filecount -ne 1 ] && {
+                ls -rc "authors" | nl
+                read -erp "Pick an author by number, or press Ctrl-C to cancel. " number
+        }
+        author_name="$(basename "$(ls -rc "authors" | nl | grep -w "$number" | awk '{print $2}')" | sed 's/.html$//')"
+        [ ! -f "authors/$author_name" ] && echo "Author \"$author_name\" doesn't exist." && exit 1
+        echo "$url,\"$title\"," >> drafts.csv
+        touch "zerm/$url.md"
+        $EDITOR "zerm/$url.md"
+}
+
+getDraftTo() {
+        files="$(cut -d, -f1 drafts.csv)"
+        filecount=$(echo "$files" | wc -l)
+        [ $filecount -eq 0 ] && echo "There's nothing to $1." && exit 1
+        number=1
+        [ $filecount -eq 1 ] || {
+                echo "$files" | nl
+                read -erp "Pick an entry by number to $1, or press Ctrl-C to cancel. " number
+        }
+        chosen="$(echo "$files" | nl | grep -w "$number" | awk '{print $2}')"
+        basefile="$(basename "$chosen")"
+}
+
+publish() {
+        SHORT_URL_ID=0
+        while grep ^$SHORT_URL_ID zm/short.csv >/dev/null ; do
+                SHORT_URL_ID=$(($SHORT_URL_ID + 1))
+        done
+        echo "$SHORT_URL_ID,$website"zerm/"$basefile" >> zm/short.csv
+        echo "$(date '+%d.%m.%Y %H:%M:%S %Z'),$(cat "zerm/$basefile")" >> articles.csv
+        grep -v "^$basefile," drafts.csv > tmp
+        mv -f tmp drafts.csv
+        echo "Article published!"
+}
+
+case "$1" in
+        n*) newpost ;;
+        e*) getDraftTo edit && $EDITOR "zerm/$chosen" ;;
+        p*) getDraftTo publish && publish ;;
+        *) echo "zm2 by ZERM <zerm@chrissx.de>
+Usage:
+zm n: new draft
+zm e: edit draft
+zm p: publish draft
+
+See https://github.com/ZERMZeitung/zm2 for more." ;;
+        # TODO: zm s: schedule
+esac
