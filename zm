@@ -44,7 +44,9 @@ publish() {
         done
         # TODO: put selection here again
         read -erp "Just give me the author. " author
-        echo "$(date '+%d.%m.%Y %H:%M:%S %Z'),$chosen,$author,$id" >> articles.csv
+        echo "$(date '+%d.%m.%Y %H:%M:%S %Z'),$chosen,$author,$id" > tmp
+        cat articles.csv >> tmp
+        mv -f tmp articles.csv
         grep -v "^$chosen," drafts.csv > tmp
         mv -f tmp drafts.csv
         echo "Article published!"
