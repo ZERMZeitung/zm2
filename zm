@@ -11,7 +11,7 @@ newpost() {
         read -erp "Give a title for your article:
         " title
         echo "$title" | grep "\"" >/dev/null && echo "Use unicode quotes in titles." && exit
-        url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g")"
+        url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed -E 's/-+/-/g' | sed "s/\(^-\|-\$\)//g")"
         [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit
         number=1
         [ $filecount -ne 1 ] && {
@@ -30,22 +30,22 @@ getDraftTo() {
         filecount=$(echo "$files" | wc -l)
         [ $filecount -eq 0 ] && echo "There's nothing to $1." && exit 1
         number=1
-        [ $filecount -eq 1 ] || {
+        [ $filecount -ne 1 ] && {
                 echo "$files" | nl
                 read -erp "Pick an entry by number to $1, or press Ctrl-C to cancel. " number
         }
-        chosen="$(echo "$files" | nl | grep -w "$number" | awk '{print $2}')"
-        basefile="$(basename "$chosen")"
+        chosen="$(echo "$files" | nl | grep -w "$number" | cut -d' ' -f2)"
 }
 
 publish() {
-        SHORT_URL_ID=0
-        while grep ^$SHORT_URL_ID zm/short.csv >/dev/null ; do
-                SHORT_URL_ID=$(($SHORT_URL_ID + 1))
+        id=20
+        while grep ",$id$" articles.csv >/dev/null ; do
+                id=$(($id + 1))
         done
-        echo "$SHORT_URL_ID,$website"zerm/"$basefile" >> zm/short.csv
-        echo "$(date '+%d.%m.%Y %H:%M:%S %Z'),$(cat "zerm/$basefile")" >> articles.csv
-        grep -v "^$basefile," drafts.csv > tmp
+        # TODO: put selection here again
+        read -erp "Just give me the author. " author
+        echo "$(date '+%d.%m.%Y %H:%M:%S %Z'),$chosen,$author,$id" >> articles.csv
+        grep -v "^$chosen," drafts.csv > tmp
         mv -f tmp drafts.csv
         echo "Article published!"
 }
