@@ -13,13 +13,6 @@ newpost() {
         echo "$title" | grep "\"" >/dev/null && echo "Use unicode quotes in titles." && exit
         url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed -E 's/-+/-/g' | sed "s/\(^-\|-\$\)//g")"
         [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit
-        number=1
-        [ $filecount -ne 1 ] && {
-                ls -rc "authors" | nl
-                read -erp "Pick an author by number, or press Ctrl-C to cancel. " number
-        }
-        author_name="$(basename "$(ls -rc "authors" | nl | grep -w "$number" | awk '{print $2}')" | sed 's/.html$//')"
-        [ ! -f "authors/$author_name" ] && echo "Author \"$author_name\" doesn't exist." && exit 1
         echo "$url,\"$title\"," >> drafts.csv
         touch "zerm/$url.md"
         $EDITOR "zerm/$url.md"
