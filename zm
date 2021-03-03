@@ -11,7 +11,7 @@ newpost() {
         read -erp "Give a title for your article:
         " title
         echo "$title" | grep "\"" >/dev/null && echo "Use unicode quotes in titles." && exit
-        url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed -E 's/-+/-/g' | sed "s/\(^-\|-\$\)//g")"
+        url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed -E 's/-+/-/g' | sed 's/\(^-\|-$\)//g')"
         [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit
         echo "$url,\"$title\"," >> drafts.csv
         touch "zerm/$url.md"
@@ -27,7 +27,7 @@ getDraftTo() {
                 echo "$files" | nl
                 read -erp "Pick an entry by number to $1, or press Ctrl-C to cancel. " number
         }
-        chosen="$(echo "$files" | nl | grep -w "$number" | cut -d' ' -f2)"
+        chosen="$(echo "$files" | nl | grep -w "$number" | cut -d'	' -f2)"
 }
 
 publish() {
@@ -47,7 +47,7 @@ publish() {
 
 case "$1" in
         n*) newpost ;;
-        e*) getDraftTo edit && $EDITOR "zerm/$chosen" ;;
+        e*) getDraftTo edit && $EDITOR "zerm/$chosen.md" ;;
         p*) getDraftTo publish && publish ;;
         *) echo "zm2 by ZERM <zerm@chrissx.de>
 Usage:
