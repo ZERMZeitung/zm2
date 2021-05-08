@@ -1,16 +1,16 @@
 #!/bin/bash
 website="https://zerm.eu/"
 shortener="https://zerm.link/"
-[ -z "$EDITOR" ] && EDITOR="vim"
+[ -z "$EDITOR" ] && EDITOR="vi"
 
-mkdir -p "zerm"
+mkdir -p zerm
 
 newpost() {
         filecount=$(ls "authors" | wc -l)
         [ $filecount -eq 0 ] && { echo "There are no authors." ; exit 1 ; }
         read -erp "Give a title for your article:
         " title
-        echo "$title" | grep "\"" >/dev/null && echo "Use unicode quotes in titles." && exit
+        echo "$title" | grep \" >/dev/null && echo "Use unicode quotes in titles." && exit
         url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed -E 's/-+/-/g' | sed 's/\(^-\|-$\)//g')"
         [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit
         echo "$url,\"$title\"," >> drafts.csv
@@ -37,9 +37,7 @@ publish() {
         done
         # TODO: put selection here again
         read -erp "Just give me the author. " author
-        echo "$(date '+%d.%m.%Y %H:%M:%S %Z'),$chosen,$author,$id" > tmp
-        cat articles.csv >> tmp
-        mv -f tmp articles.csv
+        echo "$(date '+%d.%m.%Y %H:%M:%S %Z'),$chosen,$author,$id" >> articles.csv
         grep -v "^$chosen," drafts.csv > tmp
         mv -f tmp drafts.csv
         echo "Article published!"
@@ -56,5 +54,5 @@ zm e: edit draft
 zm p: publish draft
 
 See https://github.com/ZERMZeitung/zm2 for more." ;;
-        # TODO: zm s: schedule
+# TODO: zm s: schedule
 esac
