@@ -8,8 +8,7 @@ mkdir -p zerm
 newpost() {
         filecount=$(ls "authors" | wc -l)
         [ $filecount -eq 0 ] && { echo "There are no authors." ; exit 1 ; }
-        read -erp "Give a title for your article:
-        " title
+        read -erp "Title: " title
         echo "$title" | grep \" >/dev/null && echo "Use unicode quotes in titles." && exit
         url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed -E 's/-+/-/g' | sed 's/\(^-\|-$\)//g')"
         [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit
@@ -27,26 +26,29 @@ getDraftTo() {
                 echo "$files" | nl
                 read -erp "Pick an entry by number to $1, or press Ctrl-C to cancel. " number
         }
-        chosen="$(echo "$files" | nl | grep -w "$number" | cut -d'	' -f2)"
+        echo "$files" | nl | grep -w "$number" | cut -d'	' -f2
 }
 
 publish() {
-        id=20
+        id=0
         while grep ",$id$" articles.csv >/dev/null ; do
                 id=$(($id + 1))
         done
         # TODO: put selection here again
-        read -erp "Just give me the author. " author
-        echo "$(date '+%d.%m.%Y %H:%M:%S %Z'),$chosen,$author,$id" >> articles.csv
-        grep -v "^$chosen," drafts.csv > tmp
+        read -erp "Author: " author
+        read -erp "Published (\"dd.mm.yy hh:mm:ss CES?T\") [now]: " pub
+        [ "$pub" = "" -o "$pub" = "now" ] && pub="$(date '+%d.%m.%Y %H:%M:%S %Z')"
+        # TODO: actually the title is missing here
+        echo "$pub,$1,$author,$id" >> articles.csv
+        grep -v "^$1," drafts.csv > tmp
         mv -f tmp drafts.csv
         echo "Article published!"
 }
 
 case "$1" in
         n*) newpost ;;
-        e*) getDraftTo edit && $EDITOR "zerm/$chosen.md" ;;
-        p*) getDraftTo publish && publish ;;
+        e*) $EDITOR "zerm/$(getDraftTo edit).md" ;;
+        p*) publish "$(getDraftTo publish)" ;;
         *) echo "zm2 by ZERM <zerm@chrissx.de>
 Usage:
 zm n: new draft
@@ -54,5 +56,4 @@ zm e: edit draft
 zm p: publish draft
 
 See https://github.com/ZERMZeitung/zm2 for more." ;;
-# TODO: zm s: schedule
 esac
