@@ -39,6 +39,7 @@ publish() {
         echo "$pub,$1,$title,$author,$id" >> articles.csv
         grep -v "^$1," drafts.csv > tmp
         mv -f tmp drafts.csv
+        git commit -m "Published $title."
         echo "Article published!"
 }
 
