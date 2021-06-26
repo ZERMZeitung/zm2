@@ -38,8 +38,8 @@ publish() {
         read -erp "Author: " author
         read -erp "Published (\"dd.mm.yy hh:mm:ss CES?T\") [now]: " pub
         [ "$pub" = "" -o "$pub" = "now" ] && pub="$(date '+%d.%m.%Y %H:%M:%S %Z')"
-        # TODO: actually the title is missing here
-        echo "$pub,$1,$author,$id" >> articles.csv
+        title="$(grep "^$1," drafts.csv | cut -d, -f2-)"
+        echo "$pub,$1,$title,$author,$id" >> articles.csv
         grep -v "^$1," drafts.csv > tmp
         mv -f tmp drafts.csv
         echo "Article published!"
