@@ -1,17 +1,14 @@
 #!/bin/bash
-website="https://zerm.eu/"
-shortener="https://zerm.link/"
-[ -z "$EDITOR" ] && EDITOR="vi"
 
-mkdir -p zerm
+[ -z "$EDITOR" ] && EDITOR="vi"
 
 newpost() {
         filecount=$(ls "authors" | wc -l)
         [ $filecount -eq 0 ] && { echo "There are no authors." ; exit 1 ; }
         read -erp "Title: " title
-        echo "$title" | grep \" >/dev/null && echo "Use unicode quotes in titles." && exit
+        echo "$title" | grep \" >/dev/null && echo "Use unicode quotes in titles." && exit 1
         url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed -E 's/-+/-/g' | sed 's/\(^-\|-$\)//g')"
-        [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit
+        [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit 1
         echo "$url,\"$title\"," >> drafts.csv
         touch "zerm/$url.md"
         $EDITOR "zerm/$url.md"
@@ -26,7 +23,7 @@ getDraftTo() {
                 echo "$files" | nl
                 read -erp "Pick an entry by number to $1, or press Ctrl-C to cancel. " number
         }
-        echo "$files" | nl | grep -w "$number" | cut -d'	' -f2
+        echo "$files" | nl | grep -w "$number" | awk '{ print $2 }'
 }
 
 publish() {
