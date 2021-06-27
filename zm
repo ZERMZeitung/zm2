@@ -27,10 +27,8 @@ getDraftTo() {
 }
 
 publish() {
-        id=0
-        while grep ",$id$" articles.csv >/dev/null ; do
-                id=$(($id + 1))
-        done
+        id=$(tail -n 1 articles.csv | rev | cut -d, -f1 | rev)
+        id=$(($id + 1))
         # TODO: put selection here again
         read -erp "Author: " author
         read -erp "Published (\"dd.mm.yy hh:mm:ss CES?T\") [now]: " pub
@@ -48,6 +46,7 @@ case "$1" in
         e*) $EDITOR "zerm/$(getDraftTo edit).md" ;;
         p*) publish "$(getDraftTo publish)" ;;
         *) echo "zm2 by ZERM <zerm@chrissx.de>
+
 Usage:
 zm n: new draft
 zm e: edit draft
