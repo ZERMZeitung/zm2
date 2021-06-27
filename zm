@@ -29,8 +29,7 @@ getDraftTo() {
 publish() {
         id=$(tail -n 1 articles.csv | rev | cut -d, -f1 | rev)
         id=$(($id + 1))
-        # TODO: put selection here again
-        read -erp "Author: " author
+        read -erp "Author ($(ls authors | sed 's/\.html / /g')): " author
         read -erp "Published (\"dd.mm.yy hh:mm:ss CES?T\") [now]: " pub
         [ "$pub" = "" -o "$pub" = "now" ] && pub="$(date '+%d.%m.%Y %H:%M:%S %Z')"
         title="$(grep "^$1," drafts.csv | cut -d, -f2-)"
@@ -48,9 +47,9 @@ case "$1" in
         *) echo "zm2 by ZERM <zerm@chrissx.de>
 
 Usage:
-zm n: new draft
-zm e: edit draft
-zm p: publish draft
+$0 n[ew]
+$0 e[dit]
+$0 p[ublish]
 
 See https://github.com/ZERMZeitung/zm2 for more." ;;
 esac
