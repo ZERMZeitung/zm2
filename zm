@@ -9,7 +9,7 @@ newpost() {
         echo "$title" | grep \" >/dev/null && echo "Use unicode quotes in titles." && exit 1
         url="$(echo "$title" | iconv -f UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed -E 's/-+/-/g' | sed 's/\(^-\|-$\)//g')"
         [ -f "zerm/$url.md" ] && echo "There is already an article with the same name/URL." && exit 1
-        echo "$url,\"$title\"," >> drafts.csv
+        echo "$url,\"$title\"" >> drafts.csv
         touch "zerm/$url.md"
         $EDITOR "zerm/$url.md"
 }
@@ -29,7 +29,7 @@ getDraftTo() {
 publish() {
         id=$(tail -n 1 articles.csv | rev | cut -d, -f1 | rev)
         id=$(($id + 1))
-        read -erp "Author ($(ls authors | sed 's/\.html / /g')): " author
+        read -erp "Author ($(ls authors | tr '\n' ' ' | sed 's/\.html /, /g; s/, $//')): " author
         read -erp "Published (\"dd.mm.yy hh:mm:ss CES?T\") [now]: " pub
         [ "$pub" = "" -o "$pub" = "now" ] && pub="$(date '+%d.%m.%Y %H:%M:%S %Z')"
         title="$(grep "^$1," drafts.csv | cut -d, -f2-)"
