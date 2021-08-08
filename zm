@@ -16,14 +16,14 @@ newpost() {
 
 getDraftTo() {
         files="$(cut -d, -f1 drafts.csv)"
-        filecount=$(echo "$files" | wc -l)
+        filecount=$(wc -l drafts.csv | awk '{ print $1 }')
         [ $filecount -eq 0 ] && echo "There's nothing to $1." && exit 1
         number=1
         [ $filecount -ne 1 ] && {
                 echo "$files" | nl
                 read -erp "Pick an entry by number to $1, or press Ctrl-C to cancel. " number
         }
-        echo "$files" | nl | grep -w "$number" | awk '{ print $2 }'
+        SELECTION="$(echo "$files" | nl | grep -w "$number" | awk '{ print $2 }')"
 }
 
 publish() {
@@ -42,8 +42,8 @@ publish() {
 
 case "$1" in
         n*) newpost ;;
-        e*) $EDITOR "zerm/$(getDraftTo edit).md" ;;
-        p*) publish "$(getDraftTo publish)" ;;
+        e*) getDraftTo edit && $EDITOR "zerm/$SELECTION.md" ;;
+        p*) getDraftTo publish && publish "$SELECTION" ;;
         *) echo "zm2 by ZERM <zerm@chrissx.de>
 
 Usage:
