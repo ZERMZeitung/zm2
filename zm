@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ue
 
 [ -z "$EDITOR" ] && EDITOR="vi"
 
@@ -40,16 +41,32 @@ publish() {
         [ "$commit" = "y" ] && git add -A && git commit -m "Published $title."
 }
 
+zerm2pdf() {
+        [ "$1" = "" ] && echo "Usage: zm PDF [year]" && exit 1
+        ! grep "^$1," gas.csv >/dev/null && echo 'Year does not exist.' && exit 2
+
+        ids="$(grep "^$1," gas.csv | cut -d, -f2)"
+
+        for id in $ids ; do
+                /bin/echo -n "# "
+                grep ",$id$" articles.csv | cut -d, -f3- | rev | cut -d, -f3- | rev | sed 's/^"//;s/"$//'
+                perl -pe 's|\\{.*?\\}||g' "zerm/$(grep ",$id$" articles.csv | cut -d, -f2).md" \
+                        | sed -E 's/ +,/,/g;s/ +/ /g'
+        done | cat -s | pandoc --pdf-engine=xelatex -o "$1.pdf"
+}
+
 case "$1" in
         n*) newpost ;;
         e*) getDraftTo edit && $EDITOR "zerm/$SELECTION.md" ;;
         p*) getDraftTo publish && publish "$SELECTION" ;;
+        P*) zerm2pdf $2 ;;
         *) echo "zm2 by ZERM <zerm@chrissx.de>
 
 Usage:
 $0 n[ew]
 $0 e[dit]
 $0 p[ublish]
+$0 P[DF]
 
 See https://github.com/ZERMZeitung/zm2 for more." ;;
 esac
