@@ -35,6 +35,7 @@ publish() {
         [ "$pub" = "" -o "$pub" = "now" ] && pub="$(date '+%d.%m.%Y %H:%M:%S %Z')"
         title="$(grep "^$1," drafts.csv | cut -d, -f2-)"
         echo "$pub,$1,$title,$author,$id" >> articles.csv
+        # TODO: fix crash here because grep returns 1
         grep -v "^$1," drafts.csv > tmp
         mv -f tmp drafts.csv
         read -erp "Commit? [y/N] " commit

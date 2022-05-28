@@ -15,6 +15,7 @@ the `articles.csv` file and a list of drafts contained in the `drafts.csv` file.
 zm n(ew)     # Make a new draft.
 zm e(dit)    # Edit a draft of an entry.
 zm p(ublish) # Finalize/publish a draft.
+zm P(DF)     # Generate a GA PDF
 ```
 
 ## Dependencies
